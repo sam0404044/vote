@@ -32,28 +32,33 @@ $('helpDialog').querySelectorAll('p')[0].textContent='使用方向鍵或 A / D �
 $('helpDialog').querySelectorAll('p')[1].innerHTML='每題選 <b>○ 可以做／有效</b> 或 <b>× 不能做／無效</b>，馬上看到答案與解說。首次作答計分，之後可回看。完成 16 題後，查看你答對了幾題。';
 document.querySelector('footer span').textContent='一段 5 分鐘的公民小冒險';
 const canvas=$('scene'),ctx=canvas.getContext('2d');let width=1000,height=360;
-function box(x,y,w,h,c,r=0){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
-function text(t,x,y,size=16,c='#274f43',align='left'){ctx.fillStyle=c;ctx.font=`700 ${size}px "Noto Sans TC",sans-serif`;ctx.textAlign=align;ctx.fillText(t,x,y)}
-function tree(x,y,s=1){box(x-5*s,y,10*s,65*s,'#907b56');for(const [dx,dy,r] of [[0,0,34],[-22,15,27],[24,12,28]]){ctx.fillStyle=dx<0?'#5d9876':'#73aa7d';ctx.beginPath();ctx.arc(x+dx*s,y+dy*s,r*s,0,7);ctx.fill()}}
-function person(x,y,color='#dba969',walk=false){ctx.save();ctx.translate(x,y);ctx.fillStyle='#f0ca9f';ctx.beginPath();ctx.arc(0,-49,11,0,7);ctx.fill();box(-11,-65,22,8,'#234d45',5);box(-15,-36,30,32,color,6);box(-19,-30,6,25,'#f0ca9f',3);box(13,-30,6,25,'#f0ca9f',3);let step=walk?Math.sin(performance.now()/95)*7:0;box(-11,-4,8,21+step,'#294b47',2);box(3,-4,8,21-step,'#294b47',2);box(-13,15+step,12,5,'#193a35',2);box(2,15-step,12,5,'#193a35',2);ctx.restore()}
-function building(x,y,w,h,color,label){box(x+7,y+8,w,h,'#9ebbaa44',8);box(x,y,w,h,color,5);box(x-8,y-10,w+16,14,'#426d60',3);for(let dx=24;dx<w-25;dx+=62){box(x+dx,y+25,35,39,'#eaf2e5',2);box(x+dx+16,y+25,3,39,'#b5ccc3')}box(x+w/2-22,y+h-66,44,66,'#466d63',3);box(x+15,y+h-103,w-30,29,'#fffbed',3);text(label,x+w/2,y+h-83,15,'#365e4b','center')}
-function render(){ctx.clearRect(0,0,width,height);ctx.save();ctx.scale(1,height/360);box(0,0,width,360,'#d6eade');ctx.save();ctx.translate(-camera*.25,0);for(let i=0;i<18;i++){box(i*430+100,75,180,150,i%2?'#c0d9ca':'#c6ded0',8);box(i*430+260,105,140,120,'#c3dbce',5)}ctx.restore();ctx.save();ctx.translate(-camera,0);
- box(0,227,WORLD,39,'#94b994');box(0,267,WORLD,74,'#f0e8cf');box(0,268,WORLD,5,'#d5ceb6');box(0,341,WORLD,19,'#a7b9a6');for(let i=0;i<WORLD;i+=90)box(i,309,35,3,'#d9cfae',2);
- building(80,99,215,139,'#d7ba8b','民主便利店');building(435,69,260,169,'#e0cba5','街角公寓');building(810,111,210,127,'#d9c5aa','社區公告欄');building(1100,89,210,149,'#bad3ca','公民書店');
- for(let x=1450;x<2630;x+=235)tree(x,172,x%2?1:1.1);
- box(1550,227,880,11,'#7ba98b');box(1720,225,115,10,'#b48b59');box(1730,196,95,22,'#c29b67',3);box(1737,234,7,24,'#735c43');box(1805,234,7,24,'#735c43');
- box(2050,221,120,15,'#a5b5b2',30);ctx.fillStyle='#a7d7da';ctx.beginPath();ctx.ellipse(2110,215,48,10,0,0,7);ctx.fill();box(2105,183,10,30,'#a6bbb2');text('公民公園',1840,113,26,'#3e7658','center');
- building(2780,74,550,169,'#e8d9b4','第 1128 投開票所');box(2760,55,590,22,'#43725f',3);box(2845,148,420,34,'#fffbed');text('投 票 所',3055,172,24,'#38624c','center');for(let i=0;i<5;i++)person(3380+i*47,245,['#c79c6b','#789a9b','#b87966'][i%3]);box(3550,97,260,125,'#c9d8c5',3);text('圈選練習區',3680,127,16,'#40614e','center');for(let i=0;i<3;i++){box(3570+i*76,143,60,79,'#faf6e4');box(3577+i*76,153,47,6,'#aac0aa');box(3577+i*76,172,47,4,'#d6d9c5')}
- building(4170,95,280,145,'#d5c9af','公民活動中心');box(4590,120,310,115,'#5c7a69',5);box(4600,130,290,93,'#f8f6de');text('開票紀錄',4745,155,18,'#47604c','center');for(let i=0;i<3;i++){text(['候選人 小葉','候選人 小林','候選人 小海'][i],4620,177+i*18,12);text('正 正 正',4800,177+i*18,12)}tree(5030,165,1.2);building(5230,113,240,129,'#c7d5c5','巡查終點');
- for(let i=0;i<16;i++){let q=questions[i];person(q.x+48,260,i%2?'#9aaf87':'#ce9f72');box(q.x-6,231,12,35,'#8f9173',2);box(q.x-47,220,94,21,'#fffcdf',4);text(String(i+1).padStart(2,'0')+' · '+q.zone,q.x,235,10,'#59725c','center')}
- person(player,299,'#e2ba57',moving);box(player-27,326,54,6,'#8d8a6b22',20);ctx.restore();ctx.restore();
+
+const backgrounds=[0,1,2,3].map(i=>{let im=new Image();im.src=`assets/bg${i}.png`;return im});
+const sprites=new Image();sprites.src='assets/characters.png';
+let character=0,facing=1,artReady=false;
+const cast=[{name:'沈伯洋',quote:'這就是我的忍道',note:'公開發言節錄',source:'https://www.ftvnews.com.tw/news/detail/2026a08w0737'},{name:'蔣萬安',quote:'先生賀先儒',note:'遊戲自訂台詞'}];
+Promise.all([...backgrounds,sprites].map(im=>im.decode())).then(()=>{artReady=true}).catch(()=>{$('toast').textContent='圖片載入失敗，請重新整理。'});
+document.querySelector('.heading').insertAdjacentHTML('afterend',`<section class="cast-bar" aria-label="選擇巡查角色"><span>選擇角色</span><button id="cast0" class="cast selected" aria-pressed="true"><i class="portrait shen"></i><span>沈伯洋<small>捲髮眼鏡</small></span></button><button id="cast1" class="cast" aria-pressed="false"><i class="portrait chiang"></i><span>蔣萬安<small>襯衫領帶</small></span></button><button id="speak">角色對話</button><span class="cast-note">像素二創角色 · 非本人代言</span></section>`);
+document.body.insertAdjacentHTML('beforeend','<dialog id="castDialog"><button class="close" aria-label="關閉角色對話">×</button><div class="eyebrow">像素街區 · 角色對話</div><div id="castPortrait" class="cast-portrait"></div><h2 id="castName"></h2><blockquote id="castQuote"></blockquote><p id="castNote"></p><button class="primary wide" id="closeCast">繼續巡查</button></dialog>');
+function showCharacter(){keys={};target=null;const c=cast[character];$('castPortrait').style.backgroundPosition=`100% ${character*100}%`;$('castName').textContent=c.name;$('castQuote').textContent='「'+c.quote+'」';$('castNote').innerHTML=c.source?`${c.note} · <a href="${c.source}" target="_blank" rel="noopener">查看來源</a>`:c.note+'，依創作設定呈現，並非查證的本人發言。';$('castDialog').showModal()}
+for(let n=0;n<2;n++)$('cast'+n).onclick=()=>{character=n;for(let j=0;j<2;j++){$('cast'+j).classList.toggle('selected',j===n);$('cast'+j).setAttribute('aria-pressed',String(j===n))}showCharacter()};
+$('speak').onclick=showCharacter;$('closeCast').onclick=()=>$('castDialog').close();$('castDialog').querySelector('.close').onclick=()=>$('castDialog').close();
+function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=false;ctx.save();ctx.scale(1,height/360);
+ if(artReady){
+   for(let i=0;i<4;i++){const x=i*(WORLD/4)-camera;if(x>width||x+WORLD/4<0)continue;ctx.drawImage(backgrounds[i],x,0,WORLD/4+1,360)}
+   if(moving){if(keys.arrowleft||keys.a)facing=-1;else if(keys.arrowright||keys.d)facing=1;else if(target)facing=Math.sign(target.x-player)||facing}
+   const frame=moving?1+Math.floor(performance.now()/165)%2:0;
+   const cellW=sprites.naturalWidth/4,cellH=sprites.naturalHeight/2;
+   ctx.save();ctx.translate(player-camera,318);ctx.scale(facing,1);ctx.drawImage(sprites,frame*cellW,character*cellH,cellW,cellH,-38,-134,76,152);ctx.restore();
+ }else{ctx.fillStyle='#193e38';ctx.fillRect(0,0,width,360);ctx.fillStyle='#f1e8ba';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText('像素街區載入中…',width/2,180)}
+ ctx.restore();
  questions.forEach((q,i)=>{let el=$('point'+i);el.style.left=(q.x-camera)+'px';el.hidden=q.x-camera< -100||q.x-camera>width+100});
  $('zone').textContent=questions.reduce((a,b)=>Math.abs(b.x-player)<Math.abs(a.x-player)?b:a).zone;
 }
 questions.forEach((q,i)=>{const b=document.createElement('button');b.id='point'+i;b.className='hotspot';b.setAttribute('aria-label',`${i+1} ${q.title}`);b.onclick=()=>{if(Math.abs(player-q.x)<45)openEvent(i);else{target={x:q.x,index:i};$('toast').textContent='正在走向：'+q.title}};$('hotspots').append(b);const m=document.createElement('button');m.title=`${i+1} ${q.zone}：${q.title}`;m.setAttribute('aria-label',m.title);m.onclick=()=>{target={x:q.x,index:i}};$('minimap').append(m)});
 function persist(){try{localStorage.setItem('ballot-walk-v2',JSON.stringify(answers))}catch{}}
 function update(){let count=answers.filter(v=>v!==null).length;$('progress').innerHTML=`${count} <span>/ 16 題</span>`;$('bar').style.width=count/16*100+'%';questions.forEach((q,i)=>{const done=answers[i]!==null,ok=answers[i]===q.yes;$('point'+i).className='hotspot'+(done?' visited':'')+(done&&!ok?' flagged':'');$('point'+i).innerHTML=`${done?(ok?'✓':'×'):'○'}<b>${q.title}</b>`;$('minimap').children[i].className=done?'done':''});$('toast').textContent=count===16?'巡查完成！點「查看總成績」領取報告。':'點圈圈探索 · ○ 可以／有效 · × 不行／無效'}
-function openEvent(i){active=i;keys={};target=null;const q=questions[i];$('eventMeta').textContent=`${q.zone} · 事件 ${String(i+1).padStart(2,'0')} / 16`;$('eventArt').textContent=q.icon;$('eventTitle').textContent=q.title;$('eventText').textContent=q.text;const done=answers[i]!==null;$('yes').disabled=done;$('no').disabled=done;$('feedback').innerHTML='';$('continue').hidden=!done;if(done)feedback();$('eventDialog').showModal()}
+function openEvent(i){active=i;keys={};target=null;const q=questions[i];$('eventMeta').textContent=`${q.zone} · 事件 ${String(i+1).padStart(2,'0')} / 16`;$('eventArt').textContent='';$('eventArt').className='event-pixel';$('eventArt').style.backgroundPosition=`${(i%4)*100/3}% ${Math.floor(i/4)*100/3}%`;$('eventTitle').textContent=q.title;$('eventText').textContent=q.text;const done=answers[i]!==null;$('yes').disabled=done;$('no').disabled=done;$('feedback').innerHTML='';$('continue').hidden=!done;if(done)feedback();$('eventDialog').showModal()}
 function feedback(){const q=questions[active],ok=answers[active]===q.yes;$('feedback').innerHTML=`<div class="feedback ${ok?'correct':'incorrect'}"><strong>${ok?'✓ 答對了！':'再記住這個小提醒'} 答案是 ${q.yes?'○':'×'}</strong><p>${q.reason}</p><a href="${q.source}" target="_blank" rel="noopener">官方依據 · ${q.ref}</a></div>`;$('continue').hidden=false}
 function answer(value){if(active<0||answers[active]!==null)return;answers[active]=value;persist();$('yes').disabled=$('no').disabled=true;feedback();update()}
 $('yes').onclick=()=>answer(true);$('no').onclick=()=>answer(false);$('continue').onclick=()=>{$('eventDialog').close();if(answers.every(a=>a!==null))showResults()};
