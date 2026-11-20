@@ -34,22 +34,21 @@ document.querySelector('footer span').textContent='一段 5 分鐘的公民小�
 const canvas=$('scene'),ctx=canvas.getContext('2d');let width=1000,height=360;
 
 const backgrounds=[0,1,2,3].map(i=>{let im=new Image();im.src=`assets/bg${i}.png`;return im});
-const sprites=new Image();sprites.src='assets/characters.png';
+const avatarFrames=['shen','chiang'].map(name=>['idle','walk-a','walk-b'].map(pose=>{const im=new Image();im.src=`assets/avatars/${name}-${pose}.png`;return im}));
+const gait=[1,0,2,0];let walkTime=0,walkFrame=0;
 let character=0,facing=1,artReady=false;
 const cast=[{name:'沈伯洋',quote:'這就是我的忍道',note:'公開發言節錄',source:'https://www.ftvnews.com.tw/news/detail/2026a08w0737'},{name:'蔣萬安',quote:'先生賀先儒',note:'遊戲自訂台詞'}];
-Promise.all([...backgrounds,sprites].map(im=>im.decode())).then(()=>{artReady=true}).catch(()=>{$('toast').textContent='圖片載入失敗，請重新整理。'});
+Promise.all([...backgrounds,...avatarFrames.flat()].map(im=>im.decode())).then(()=>{artReady=true}).catch(()=>{$('toast').textContent='圖片載入失敗，請重新整理。'});
 document.querySelector('.heading').insertAdjacentHTML('afterend',`<section class="cast-bar" aria-label="選擇巡查角色"><span>選擇角色</span><button id="cast0" class="cast selected" aria-pressed="true"><i class="portrait shen"></i><span>沈伯洋<small>捲髮眼鏡</small></span></button><button id="cast1" class="cast" aria-pressed="false"><i class="portrait chiang"></i><span>蔣萬安<small>襯衫領帶</small></span></button><button id="speak">角色對話</button><span class="cast-note">像素二創角色 · 非本人代言</span></section>`);
 document.body.insertAdjacentHTML('beforeend','<dialog id="castDialog"><button class="close" aria-label="關閉角色對話">×</button><div class="eyebrow">像素街區 · 角色對話</div><div id="castPortrait" class="cast-portrait"></div><h2 id="castName"></h2><blockquote id="castQuote"></blockquote><p id="castNote"></p><button class="primary wide" id="closeCast">繼續巡查</button></dialog>');
-function showCharacter(){keys={};target=null;const c=cast[character];$('castPortrait').style.backgroundPosition=`100% ${character*100}%`;$('castName').textContent=c.name;$('castQuote').textContent='「'+c.quote+'」';$('castNote').innerHTML=c.source?`${c.note} · <a href="${c.source}" target="_blank" rel="noopener">查看來源</a>`:c.note+'，依創作設定呈現，並非查證的本人發言。';$('castDialog').showModal()}
+function showCharacter(){keys={};target=null;const c=cast[character];$('castPortrait').style.backgroundImage=`url('assets/avatars/${character===0?'shen':'chiang'}-idle.png')`;$('castName').textContent=c.name;$('castQuote').textContent='「'+c.quote+'」';$('castNote').innerHTML=c.source?`${c.note} · <a href="${c.source}" target="_blank" rel="noopener">查看來源</a>`:c.note+'，依創作設定呈現，並非查證的本人發言。';$('castDialog').showModal()}
 for(let n=0;n<2;n++)$('cast'+n).onclick=()=>{character=n;for(let j=0;j<2;j++){$('cast'+j).classList.toggle('selected',j===n);$('cast'+j).setAttribute('aria-pressed',String(j===n))}showCharacter()};
 $('speak').onclick=showCharacter;$('closeCast').onclick=()=>$('castDialog').close();$('castDialog').querySelector('.close').onclick=()=>$('castDialog').close();
 function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=false;ctx.save();ctx.scale(1,height/360);
  if(artReady){
    for(let i=0;i<4;i++){const x=i*(WORLD/4)-camera;if(x>width||x+WORLD/4<0)continue;ctx.drawImage(backgrounds[i],x,0,WORLD/4+1,360)}
    if(moving){if(keys.arrowleft||keys.a)facing=-1;else if(keys.arrowright||keys.d)facing=1;else if(target)facing=Math.sign(target.x-player)||facing}
-   const frame=moving?1+Math.floor(performance.now()/165)%2:0;
-   const cellW=sprites.naturalWidth/4,cellH=sprites.naturalHeight/2;
-   ctx.save();ctx.translate(player-camera,318);ctx.scale(facing,1);ctx.drawImage(sprites,frame*cellW,character*cellH,cellW,cellH,-38,-134,76,152);ctx.restore();
+   ctx.save();ctx.translate(player-camera,318);ctx.scale(facing,1);ctx.drawImage(avatarFrames[character][walkFrame],-70,-122,140,140);ctx.restore();
  }else{ctx.fillStyle='#193e38';ctx.fillRect(0,0,width,360);ctx.fillStyle='#f1e8ba';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText('像素街區載入中…',width/2,180)}
  ctx.restore();
  questions.forEach((q,i)=>{let el=$('point'+i);el.style.left=(q.x-camera)+'px';el.hidden=q.x-camera< -100||q.x-camera>width+100});
@@ -69,4 +68,4 @@ document.querySelectorAll('.close').forEach(b=>b.onclick=()=>b.closest('dialog')
 function dialogOpen(){return !!document.querySelector('dialog[open]')}window.addEventListener('keydown',e=>{if(dialogOpen())return;if(['ArrowLeft','ArrowRight','a','d','A','D','e','E'].includes(e.key))e.preventDefault();keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e'&&!e.repeat)inspect()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEventListener('blur',()=>{keys={}});
 [['left','arrowleft'],['right','arrowright']].forEach(([id,k])=>{const el=$(id);el.onpointerdown=e=>{e.preventDefault();el.setPointerCapture(e.pointerId);target=null;keys[k]=true};el.onpointerup=el.onpointercancel=el.onlostpointercapture=()=>keys[k]=false});
 function resize(){const dpr=window.devicePixelRatio||1;width=$('viewport').clientWidth;height=$('viewport').clientHeight;canvas.width=width*dpr;canvas.height=height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}window.addEventListener('resize',resize);resize();
-function tick(now){let dt=Math.min((now-last)/1000,.04);last=now;let dir=0;if(!dialogOpen()){dir=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0);if(dir)target=null;if(target){let distance=target.x-player;if(Math.abs(distance)<6){player=target.x;let i=target.index;target=null;openEvent(i)}else dir=Math.sign(distance)}}moving=!!dir&&!dialogOpen();if(moving)player=Math.max(50,Math.min(WORLD-60,player+dir*340*dt));camera=Math.max(0,Math.min(WORLD-width,player-width*.38));render();requestAnimationFrame(tick)}update();requestAnimationFrame(tick);
+function tick(now){let dt=Math.min((now-last)/1000,.04);last=now;let dir=0;if(!dialogOpen()){dir=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0);if(dir)target=null;if(target){let distance=target.x-player;if(Math.abs(distance)<6){player=target.x;let i=target.index;target=null;openEvent(i)}else dir=Math.sign(distance)}}moving=!!dir&&!dialogOpen();if(moving)player=Math.max(50,Math.min(WORLD-60,player+dir*340*dt));if(moving){walkTime+=dt;walkFrame=gait[Math.floor(walkTime/.14)%gait.length]}else{walkTime=0;walkFrame=0}canvas.dataset.animationFrame=String(walkFrame);canvas.dataset.moving=String(moving);camera=Math.max(0,Math.min(WORLD-width,player-width*.38));render();requestAnimationFrame(tick)}update();requestAnimationFrame(tick);
