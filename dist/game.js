@@ -30,7 +30,7 @@ try{const saved=JSON.parse(localStorage.getItem('ballot-walk-v4'));if(saved&&Arr
 $('progress').innerHTML=`0 <span>/ ${TOTAL} 題</span>`;
 document.querySelector('.heading p').textContent='走過四個街區，破解 18 個投票迷思。';
 document.querySelector('.map-caption').textContent='點圈圈走近事件，按 ○ 或 ×，立刻揭曉。';
-document.querySelector('.below').innerHTML='<div><span class="legend-circle">○</span> 未作答 <span class="legend-circle seen">●</span> 已作答 <span class="legend-check">✓</span> 答對的事件</div><p>4 個街區 · 18 個情境 · 即時解答</p>';
+document.querySelector('.below').remove();
 $('submit').textContent='查看總成績';$('submit').disabled=false;
 document.querySelector('.check-choice').remove();$('save').remove();document.querySelector('#eventDialog .hint').remove();
 $('eventDialog').insertAdjacentHTML('beforeend','<div class="choices"><button id="yes" class="answer-yes">○ <span>可以做／有效</span></button><button id="no" class="answer-no">× <span>不能做／無效</span></button></div><div id="feedback" aria-live="polite"></div><button id="continue" class="primary wide" hidden>繼續探索</button>');
@@ -109,7 +109,6 @@ questions.forEach((q,i)=>{
  button.onclick=()=>{if(Math.abs(player-q.x)<110)openEvent(i);else target={x:q.x,index:i}};$('hotspots').append(button);
  const stop=document.createElement('button');stop.title=`${i+1} ${q.zone}：${q.title}`;stop.setAttribute('aria-label',stop.title);stop.textContent=String(i+1);stop.onclick=()=>{target={x:q.x,index:i}};$('minimap').append(stop);
 });
-document.querySelector('.controls').insertAdjacentHTML('beforebegin','<div class="nearby"><div><small>附近事件</small><strong id="nearTitle"></strong></div><button id="previousStop" aria-label="前一個事件">上一站</button><button id="nextStop" aria-label="下一個事件">下一站</button></div>');
 document.body.insertAdjacentHTML('beforeend','<dialog id="submitDialog"><button class="close" aria-label="關閉交卷確認">×</button><div class="eyebrow">準備交卷</div><h2>還有區域沒有搜尋到</h2><p id="unseenText"></p><p class="note">未探索、未作答的題目將視為答錯。確認交卷後，這次成績就會固定。</p><div class="result-actions"><button id="keepExploring">繼續探索</button><button class="primary" id="confirmSubmit">確認查看總成績</button></div></dialog>');
 function persist(){try{localStorage.setItem('ballot-walk-v4',JSON.stringify({answers,finished}))}catch{}}
 function correctCount(){return questions.filter((q,i)=>answers[i]!==null&&answers[i]===q.yes).length}
@@ -137,14 +136,23 @@ function feedback(){
  $('feedback').innerHTML=`<div class="feedback ${ok?'correct':'incorrect'}"><strong>${missing?'未探索，計為答錯':ok?'✓ 答對了！':'再記住這個小提醒'} · 答案是 ${q.yes?'○':'×'} ${labels(q)[q.yes?0:1]}</strong><p>${q.reason}</p><a href="${q.source}" target="_blank" rel="noopener">${q.artIndex===1?'資料來源':'官方依據'} · ${q.ref}</a></div>`;
  $('continue').hidden=false;
 }
-function answer(value){if(active<0||answers[active]!==null||finished)return;answers[active]=value;persist();$('yes').disabled=$('no').disabled=true;feedback();update()}
+document.body.insertAdjacentHTML('beforeend','<dialog id="answerOverlay" aria-label="作答回饋"><div id="answerMark"></div><strong id="answerVerdict"></strong></dialog>');
+$('answerOverlay').addEventListener('cancel',event=>event.preventDefault());
+let answerEffectTimer;
+function showAnswerEffect(correct,index){
+ const overlay=$('answerOverlay');overlay.dataset.correct=String(correct);overlay.setAttribute('aria-label',correct?'答對了':'答錯了');
+ const mark=correct?'<path class="brush-stroke" pathLength="1" d="M 304 82 C 421 75 518 166 521 284 C 531 405 432 517 309 521 C 188 528 81 441 78 312 C 70 190 172 84 296 81"/>':'<path class="brush-stroke" pathLength="1" d="M 135 132 Q 282 290 465 467"/><path class="brush-stroke second" pathLength="1" d="M 464 137 Q 298 302 135 465"/>';
+ $('answerMark').innerHTML=`<svg viewBox="0 0 600 600" aria-hidden="true"><defs><filter id="brushTexture"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="7" result="grain"/><feDisplacementMap in="SourceGraphic" in2="grain" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter></defs><g filter="url(#brushTexture)">${mark}</g></svg>`;
+ $('answerVerdict').textContent=correct?'答對了！':'答錯了';
+ overlay.showModal();clearTimeout(answerEffectTimer);
+ answerEffectTimer=setTimeout(()=>{overlay.close();if(active===index&&$('eventDialog').open)feedback()},1150);
+}
+function answer(value){if(active<0||answers[active]!==null||finished)return;answers[active]=value;persist();$('yes').disabled=$('no').disabled=true;update();showAnswerEffect(value===questions[active].yes,active)}
 $('yes').onclick=()=>answer(true);$('no').onclick=()=>answer(false);
 $('continue').onclick=()=>{$('eventDialog').close();if(!finished&&answers.every(a=>a!==null))showResults()};
 function nearestIndex(){return questions.reduce((best,q,i)=>Math.abs(q.x-player)<Math.abs(questions[best].x-player)?i:best,0)}
 function inspect(){const i=nearestIndex();if(Math.abs(questions[i].x-player)<170)openEvent(i);else target={x:questions[i].x,index:i}}
 $('inspect').textContent='檢查事件';$('inspect').onclick=inspect;
-$('previousStop').onclick=()=>{const i=Math.max(0,nearestIndex()-1);target={x:questions[i].x,index:i}};
-$('nextStop').onclick=()=>{const i=Math.min(TOTAL-1,nearestIndex()+1);target={x:questions[i].x,index:i}};
 function requestResults(){
  keys={};target=null;
  const unseen=answers.filter(a=>a===null).length;
@@ -166,7 +174,7 @@ $('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;persist
 $('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ ${location.href}`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製挑戰結果'}catch{$('share').textContent='請複製網址分享：'+location.href}};
 document.querySelectorAll('.close').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 $('help').onclick=()=>$('helpDialog').showModal();$('start').onclick=()=>$('helpDialog').close();
-$('helpDialog').querySelectorAll('p')[0].textContent='手機可左右滑動地圖、按住移動鍵，或點人物旁的圈圈走近事件。「上一站／下一站」可快速探索。電腦可使用方向鍵或 A / D，按 E 檢查。';
+$('helpDialog').querySelectorAll('p')[0].textContent='手機可左右滑動地圖、按住移動鍵，或點人物旁的圈圈走近事件。也可點下方題號快速探索。電腦可使用方向鍵或 A / D，按 E 檢查。';
 $('helpDialog').querySelectorAll('p')[1].textContent=`共有 ${TOTAL} 題，選 ○ 或 × 後立即揭曉。首次作答計分。可以提早交卷，但未探索的題目算錯，確認後成績固定。`;
 function dialogOpen(){return !!document.querySelector('dialog[open]')}
 window.addEventListener('keydown',e=>{if(dialogOpen())return;if(['ArrowLeft','ArrowRight','a','d','A','D','e','E'].includes(e.key))e.preventDefault();keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e'&&!e.repeat)inspect()});
