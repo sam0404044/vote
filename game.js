@@ -56,11 +56,11 @@ try{const saved=JSON.parse(localStorage.getItem('ballot-walk-v4'));if(saved&&Arr
 
 // Update the first draft to the immediate-feedback, sixteen-stop game.
 
-$('progress').innerHTML=`0 <span>/ ${TOTAL} 題</span>`;
 
-document.querySelector('.heading p').textContent='走過四個街區，破解 18 個投票迷思。';
 
-document.querySelector('.map-caption').textContent='點圈圈走近事件，按 ○ 或 ×，立刻揭曉。';
+
+
+
 
 document.querySelector('.below').remove();
 
@@ -80,13 +80,17 @@ const canvas=$('scene'),ctx=canvas.getContext('2d');let width=1000,height=360;
 
 
 
-const backgrounds=[0,1,2,3].map(i=>{let im=new Image();im.src=`assets/bg${i}.png`;return im});
+const backgrounds=[0,1,2,3].map(i=>{let im=new Image();im.src=`assets/bg${i}.webp`;return im});
 
-const avatarFrames=['shen','chiang'].map(name=>['idle','walk-a','walk-b'].map(pose=>{const im=new Image();im.src=`assets/avatars/${name}-${pose}.png`;return im}));
+const avatarFrames=['shen','chiang'].map(name=>['idle','walk-a','walk-b'].map(pose=>{const im=new Image();im.src=`assets/avatars/${name}-${pose}.webp`;return im}));
 
 const gait=[1,0,2,0];let walkTime=0,walkFrame=0;
 
-let character=0,facing=1,artReady=false;
+let character=0,facing=1,artReady=false,phase='title';
+function setPhase(next){phase=next;keys={};target=null;document.querySelector('.game').dataset.phase=next;$('introStage').hidden=next==='play';$('titleStage').hidden=next!=='title';$('characterStage').hidden=next!=='character';$('playStage').inert=next!=='play';if(next==='character')$('cast0').focus();if(next==='play')$('inspect').focus()}
+$('beginGame').onclick=()=>setPhase('character');
+$('enterGame').onclick=()=>{if(artReady)setPhase('play')};
+setPhase('title');
 
 let continuousMap;
 
@@ -146,9 +150,9 @@ function composeContinuousMap(){
 
 }
 
-Promise.all([...backgrounds,...avatarFrames.flat()].map(im=>im.decode())).then(()=>{composeContinuousMap();artReady=true}).catch(()=>{$('toast').textContent='圖片載入失敗，請重新整理。'});
+Promise.all([...backgrounds,...avatarFrames.flat()].map(im=>im.decode())).then(()=>{composeContinuousMap();artReady=true;$('gameLoading').hidden=true;$('enterGame').disabled=false;$('enterGame').textContent='進入街區'}).catch(()=>{$('gameLoading').textContent='圖片載入失敗，請重新整理重試。'});
 
-document.querySelector('.heading').insertAdjacentHTML('afterend',`<section class="cast-bar" aria-label="選擇巡查角色"><span>選擇角色</span><button id="cast0" class="cast selected" aria-pressed="true"><i class="portrait shen"></i><span>沈伯洋</span></button><button id="cast1" class="cast" aria-pressed="false"><i class="portrait chiang"></i><span>蔣萬安</span></button><span class="cast-note">像素二創角色 · 非本人代言</span></section>`);
+
 
 for(let n=0;n<2;n++)$('cast'+n).onclick=()=>{character=n;for(let j=0;j<2;j++){$('cast'+j).classList.toggle('selected',j===n);$('cast'+j).setAttribute('aria-pressed',String(j===n))}};
 
@@ -198,7 +202,7 @@ function update(){
 
  const count=answers.filter(v=>v!==null).length;
 
- $('progress').innerHTML=`${count} <span>/ ${TOTAL} 題</span>`;$('bar').style.width=count/TOTAL*100+'%';
+
 
  questions.forEach((q,i)=>{const done=answers[i]!==null,ok=done&&answers[i]===q.yes,closed=done||finished;
 
@@ -310,7 +314,7 @@ function showResults(){
 
 $('submit').onclick=requestResults;
 
-$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;persist();player=120;target=null;active=-1;update();$('resultDialog').close()};
+$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;persist();player=120;target=null;active=-1;update();$('resultDialog').close();setPhase('title')};
 
 $('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ https://vote.playferment.com/`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製分享結果'}catch{$('share').textContent='請複製網址分享：https://vote.playferment.com/'}};
 
@@ -323,7 +327,7 @@ $('helpDialog').querySelectorAll('p')[0].textContent='手機可左右滑動地�
 
 $('helpDialog').querySelectorAll('p')[1].textContent=`共有 ${TOTAL} 題，選 ○ 或 × 後立即揭曉。首次作答計分。可以提早交卷，但未探索的題目算錯，確認後成績固定。`;
 
-function dialogOpen(){return !!document.querySelector('dialog[open]')}
+function dialogOpen(){return phase!=='play'||!artReady||!!document.querySelector('dialog[open]')}
 
 window.addEventListener('keydown',e=>{if(dialogOpen())return;if(['ArrowLeft','ArrowRight','a','d','A','D','e','E'].includes(e.key))e.preventDefault();keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e'&&!e.repeat)inspect()});
 
@@ -332,13 +336,9 @@ window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEv
 [['left','arrowleft'],['right','arrowright']].forEach(([id,key])=>{const button=$(id);button.onpointerdown=e=>{e.preventDefault();button.setPointerCapture(e.pointerId);target=null;keys[key]=true};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>keys[key]=false});
 
 let gesture=null;
-
-$('viewport').addEventListener('pointerdown',e=>{if(e.target.closest('button')||dialogOpen())return;gesture={x:e.clientX,player,dragged:false};$('viewport').setPointerCapture(e.pointerId)});
-
-$('viewport').addEventListener('pointermove',e=>{if(!gesture)return;const dx=e.clientX-gesture.x;if(Math.abs(dx)>8){gesture.dragged=true;target={x:Math.max(50,Math.min(WORLD-60,gesture.player-dx*2)),index:null}}});
-
+$('viewport').addEventListener('pointerdown',e=>{if(e.target.closest('button')||dialogOpen())return;gesture={x:e.clientX,player,dragged:false,touch:e.pointerType==='touch'};$('viewport').setPointerCapture(e.pointerId)});
+$('viewport').addEventListener('pointermove',e=>{if(!gesture||!gesture.touch)return;const dx=e.clientX-gesture.x;if(Math.abs(dx)>8){gesture.dragged=true;target={x:Math.max(50,Math.min(WORLD-60,gesture.player-dx*2)),index:null}}});
 $('viewport').addEventListener('pointerup',e=>{if(!gesture)return;if(!gesture.dragged){const rect=$('viewport').getBoundingClientRect();const worldX=camera+e.clientX-rect.left;const hit=questions.findIndex(q=>worldX>=q.x-25&&worldX<=q.x+160);target={x:hit<0?Math.max(50,Math.min(WORLD-60,worldX)):questions[hit].x,index:hit<0?null:hit}}gesture=null});
-
 $('viewport').addEventListener('pointercancel',()=>gesture=null);
 
 function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);width=$('viewport').clientWidth;height=$('viewport').clientHeight;canvas.width=width*dpr;canvas.height=height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
