@@ -50,3 +50,8 @@
 
 /* Keep action buttons legible before hover as well as during interaction. */
 dialog button.primary,.controls button.primary{background:#206b51;color:#fff;border-color:#206b51}dialog button.primary:hover,.controls button.primary:hover{background:#164f3c;color:#fff;border-color:#164f3c}
+
+/* Larger movement controls, with the score action alongside. */
+.controls{display:flex;justify-content:space-between;flex-wrap:nowrap}.walk{gap:10px}.walk button{width:76px;min-height:56px;font-size:28px;padding:6px}.controls #submit{margin-left:auto;min-height:56px}@media(max-width:760px){.controls{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px;padding:7px 8px}.walk{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}.walk button{width:100%;min-height:50px;font-size:28px;padding:4px}.walk span{display:none}.controls #submit{width:100%;margin:0;min-height:50px;font-size:12px;padding:6px}}
+
+#answerOverlay{pointer-events:auto;cursor:pointer}#viewport,.walk,.walk button{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}.walk button{touch-action:none}

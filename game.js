@@ -52,7 +52,8 @@ const TOTAL=questions.length;
 
 const WORLD=5700;let player=120,camera=0,target=null,keys={},moving=false,active=-1,last=0;let answers=Array(TOTAL).fill(null),finished=false;
 
-try{const saved=JSON.parse(localStorage.getItem('ballot-walk-v4'));if(saved&&Array.isArray(saved.answers)&&saved.answers.length===TOTAL&&saved.answers.every(v=>v===null||typeof v==='boolean')){answers=saved.answers;finished=saved.finished===true}}catch{}
+// Each page load starts a fresh game; discard the previous saved session.
+try{localStorage.removeItem('ballot-walk-v4')}catch{}
 
 // Update the first draft to the immediate-feedback, sixteen-stop game.
 
@@ -87,7 +88,7 @@ const avatarFrames=['shen','chiang'].map(name=>['idle','walk-a','walk-b'].map(po
 const gait=[1,0,2,0];let walkTime=0,walkFrame=0;
 
 let character=0,facing=1,artReady=false,phase='title';
-function setPhase(next){phase=next;keys={};target=null;document.querySelector('.game').dataset.phase=next;$('introStage').hidden=next==='play';$('titleStage').hidden=next!=='title';$('characterStage').hidden=next!=='character';$('playStage').inert=next!=='play';if(next==='character')$('cast0').focus();if(next==='play')$('inspect').focus()}
+function setPhase(next){phase=next;keys={};target=null;document.querySelector('.game').dataset.phase=next;$('introStage').hidden=next==='play';$('titleStage').hidden=next!=='title';$('characterStage').hidden=next!=='character';$('playStage').inert=next!=='play';if(next==='character')$('cast0').focus();if(next==='play')$('right').focus()}
 $('beginGame').onclick=()=>setPhase('character');
 $('enterGame').onclick=()=>{if(artReady)setPhase('play')};
 setPhase('title');
@@ -195,7 +196,6 @@ questions.forEach((q,i)=>{
 
 document.body.insertAdjacentHTML('beforeend','<dialog id="submitDialog"><button class="close" aria-label="關閉交卷確認">×</button><div class="eyebrow">準備交卷</div><h2>還有區域沒有搜尋到</h2><p id="unseenText"></p><p class="note">未探索、未作答的題目將視為答錯。確認交卷後，這次成績就會固定。</p><div class="result-actions"><button id="keepExploring">繼續探索</button><button class="primary" id="confirmSubmit">確認查看總成績</button></div></dialog>');
 
-function persist(){try{localStorage.setItem('ballot-walk-v4',JSON.stringify({answers,finished}))}catch{}}
 
 function correctCount(){return questions.filter((q,i)=>answers[i]!==null&&answers[i]===q.yes).length}
 
@@ -215,7 +215,6 @@ function update(){
 
  });
 
- $('toast').textContent=finished?'本次已交卷，可查看成績或重新巡查。':count===TOTAL?'全部事件已完成！查看總成績。':'滑動地圖行走 · 點圈圈檢查';
 
 }
 
@@ -251,7 +250,13 @@ document.body.insertAdjacentHTML('beforeend','<dialog id="answerOverlay" aria-la
 
 $('answerOverlay').addEventListener('cancel',event=>event.preventDefault());
 
-let answerEffectTimer;
+let answerEffectTimer,answerEffectIndex=-1;
+function finishAnswerEffect(){
+ const overlay=$('answerOverlay');if(!overlay.open)return;
+ clearTimeout(answerEffectTimer);overlay.close();
+ if(active===answerEffectIndex&&$('eventDialog').open)feedback();
+}
+$('answerOverlay').addEventListener('click',event=>{event.stopPropagation();finishAnswerEffect()});
 
 function showAnswerEffect(correct,index){
 
@@ -263,13 +268,13 @@ function showAnswerEffect(correct,index){
 
  $('answerVerdict').textContent=correct?'答對了！':'答錯了';
 
- overlay.showModal();clearTimeout(answerEffectTimer);
+ answerEffectIndex=index;overlay.showModal();clearTimeout(answerEffectTimer);
 
- answerEffectTimer=setTimeout(()=>{overlay.close();if(active===index&&$('eventDialog').open)feedback()},1150);
+ answerEffectTimer=setTimeout(finishAnswerEffect,1150);
 
 }
 
-function answer(value){if(active<0||answers[active]!==null||finished)return;answers[active]=value;persist();$('yes').disabled=$('no').disabled=true;update();showAnswerEffect(value===questions[active].yes,active)}
+function answer(value){if(active<0||answers[active]!==null||finished)return;answers[active]=value;$('yes').disabled=$('no').disabled=true;update();showAnswerEffect(value===questions[active].yes,active)}
 
 $('yes').onclick=()=>answer(true);$('no').onclick=()=>answer(false);
 
@@ -279,7 +284,7 @@ function nearestIndex(){return questions.reduce((best,q,i)=>Math.abs(q.x-player)
 
 function inspect(){const i=nearestIndex();if(Math.abs(questions[i].x-player)<170)openEvent(i);else target={x:questions[i].x,index:i}}
 
-$('inspect').textContent='檢查事件';$('inspect').onclick=inspect;
+
 
 function requestResults(){
 
@@ -297,7 +302,7 @@ $('confirmSubmit').onclick=()=>{$('submitDialog').close();showResults()};
 
 function showResults(){
 
- finished=true;persist();update();const done=answers.filter(a=>a!==null).length,score=correctCount(),unseen=TOTAL-done;
+ finished=true;update();const done=answers.filter(a=>a!==null).length,score=correctCount(),unseen=TOTAL-done;
 
  $('score').setAttribute('aria-label',`答對 ${score} 題，共 ${TOTAL} 題`);
 
@@ -315,7 +320,7 @@ function showResults(){
 
 $('submit').onclick=requestResults;
 
-$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;persist();player=120;target=null;active=-1;update();$('resultDialog').close();setPhase('title')};
+$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;player=120;target=null;active=-1;update();$('resultDialog').close();setPhase('title')};
 
 $('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ https://vote.playferment.com/`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製分享結果'}catch{$('share').textContent='請複製網址分享：https://vote.playferment.com/'}};
 
@@ -343,10 +348,10 @@ window.addEventListener('keydown',e=>{if(dialogOpen())return;if(['ArrowLeft','Ar
 
 window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEventListener('blur',()=>{keys={}});
 
-[['left','arrowleft'],['right','arrowright']].forEach(([id,key])=>{const button=$(id);button.onpointerdown=e=>{e.preventDefault();button.setPointerCapture(e.pointerId);target=null;keys[key]=true};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>keys[key]=false});
+[['left','arrowleft'],['right','arrowright']].forEach(([id,key])=>{const button=$(id);button.onpointerdown=e=>{if(e.button!==0||dialogOpen())return;e.preventDefault();button.setPointerCapture(e.pointerId);target=null;keys[key]=true};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>keys[key]=false});
 
 let gesture=null;
-$('viewport').addEventListener('pointerdown',e=>{if(e.target.closest('button')||dialogOpen())return;gesture={x:e.clientX,player,dragged:false,touch:e.pointerType==='touch'};$('viewport').setPointerCapture(e.pointerId)});
+$('viewport').addEventListener('pointerdown',e=>{if(e.button!==0||e.target.closest('button')||dialogOpen())return;gesture={x:e.clientX,player,dragged:false,touch:e.pointerType==='touch'};$('viewport').setPointerCapture(e.pointerId)});
 $('viewport').addEventListener('pointermove',e=>{if(!gesture||!gesture.touch)return;const dx=e.clientX-gesture.x;if(Math.abs(dx)>8){gesture.dragged=true;target={x:Math.max(50,Math.min(WORLD-60,gesture.player-dx*2)),index:null}}});
 $('viewport').addEventListener('pointerup',e=>{if(!gesture)return;if(!gesture.dragged){const rect=$('viewport').getBoundingClientRect();const worldX=camera+e.clientX-rect.left;const hit=questions.findIndex(q=>worldX>=q.x-25&&worldX<=q.x+160);target={x:hit<0?Math.max(50,Math.min(WORLD-60,worldX)):questions[hit].x,index:hit<0?null:hit}}gesture=null});
 $('viewport').addEventListener('pointercancel',()=>gesture=null);
@@ -375,7 +380,6 @@ function tick(now){
 
  camera=Math.max(0,Math.min(Math.max(0,WORLD-width),player-width*.38));render();
 
- if(player>WORLD-140&&!finished)$('toast').textContent='走到終點了！可查看總成績，未探索題目算錯。';
 
  requestAnimationFrame(tick);
 
@@ -383,3 +387,6 @@ function tick(now){
 
 update();requestAnimationFrame(tick);
 
+
+// Long-pressing the map or movement buttons must not open the browser menu.
+[$('viewport'),document.querySelector('.walk')].forEach(surface=>surface.addEventListener('contextmenu',event=>{event.preventDefault();keys={};gesture=null}));
