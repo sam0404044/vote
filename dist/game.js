@@ -6,7 +6,7 @@ const questions=[
 
  ['住宅街','群組裡的拜票','投票日早上，在群組傳訊息：「請大家投給候選人小葉！」可以嗎？',false,'投票日不得從事競選、助選活動。','第56條','📱'],
 
- ['住宅街','PUMA 衣服算助選？','投票日，只知道某人穿著 PUMA 運動品牌衣服，沒有其他行為資訊。單憑品牌名稱，就能直接認定他違法助選嗎？',false,'不能只憑品牌名稱認定違法，也不是任何穿法都一定合法。須整體觀察行為、情境與助選意圖；投票日仍禁止競選、助選。','中選會回應報導','👕'],
+ ['住宅街','PUMA 衣服算助選？','投票日，只知道某人穿著 PUMA 運動品牌衣服，沒有其他行為資訊。單憑品牌名稱，就能直接認定他違法助選嗎？',false,'重點不只是衣服上的字或品牌，而是整體行為放在當時情境中，是否在替特定候選人競選、助選。單純日常穿著，不能只憑品牌就認定違法；若刻意相約穿著相同、具有政治連結的符號展示支持，可能增加助選爭議，但仍須依個案事實判斷。若擔心穿著與行為容易被誤會，可以換件衣服，避免在投票日刻意試探法律界線。','中選會回應報導','👕'],
 
  ['住宅街','出發前關機','進投票所前，把手機電源完全關閉，再隨身帶入，可以嗎？',true,'已關閉電源的行動裝置，屬法定例外。靜音與關機不同。','第65條','📴'],
 
@@ -65,7 +65,7 @@ try{localStorage.removeItem('ballot-walk-v4')}catch{}
 
 document.querySelector('.below').remove();
 
-$('submit').textContent='查看總成績';$('submit').disabled=false;
+
 
 document.querySelector('.check-choice').remove();$('save').remove();document.querySelector('#eventDialog .hint').remove();
 
@@ -174,6 +174,8 @@ function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=fals
 
  questions.forEach((q,i)=>{let el=$('point'+i);el.style.left=(q.x-camera)+'px';el.hidden=q.x-camera< -100||q.x-camera>width+100});
 
+ $('streetBin').style.left=(620-camera)+'px';
+ $('streetBin').style.top=(height*336/360-76)+'px';
  const nearest=questions.reduce((a,b)=>Math.abs(b.x-player)<Math.abs(a.x-player)?b:a);
 
  $('zone').textContent=nearest.zone;
@@ -318,9 +320,11 @@ function showResults(){
 
 }
 
-$('submit').onclick=requestResults;
+$('endResults').onclick=()=>{$('endDialog').close();requestResults()};
+$('streetBin').onclick=()=>{if(dialogOpen())return;keys={};target=null;$('streetBinDialog').showModal()};
+let endPromptShown=false;
 
-$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;player=120;target=null;active=-1;update();$('resultDialog').close();setPhase('title')};
+$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;endPromptShown=false;player=120;target=null;active=-1;update();$('resultDialog').close();setPhase('title')};
 
 $('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ https://vote.playferment.com/`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製分享結果'}catch{$('share').textContent='請複製網址分享：https://vote.playferment.com/'}};
 
@@ -379,6 +383,9 @@ function tick(now){
  canvas.dataset.animationFrame=String(walkFrame);canvas.dataset.moving=String(moving);
 
  camera=Math.max(0,Math.min(Math.max(0,WORLD-width),player-width*.38));render();
+ const atEnd=Math.abs(player-questions[TOTAL-1].x)<110;
+ if(!atEnd)endPromptShown=false;
+ if(atEnd&&!endPromptShown&&!dialogOpen()&&!target){endPromptShown=true;keys={};$('endDialog').showModal()}
 
 
  requestAnimationFrame(tick);
