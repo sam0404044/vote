@@ -225,7 +225,7 @@ function openEvent(i){
 
  active=i;keys={};target=null;const q=questions[i];$('eventMeta').textContent=`${q.zone} · 事件 ${String(i+1).padStart(2,'0')} / ${TOTAL}`;
 
- $('eventArt').replaceChildren();$('eventArt').className='';$('eventArt').style.backgroundPosition='';$('eventArt').textContent=q.icon||'○';
+ const illustration=new Image();illustration.src=`assets/events/${q.artIndex}.webp`;illustration.alt=q.title+'情境插圖';illustration.width=240;illustration.height=240;$('eventArt').replaceChildren(illustration);$('eventArt').className='event-illustration';$('eventArt').style.backgroundPosition='';
 
  $('eventTitle').textContent=q.title;$('eventText').textContent=q.text;
 
@@ -320,6 +320,15 @@ $('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;persist
 $('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ https://vote.playferment.com/`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製分享結果'}catch{$('share').textContent='請複製網址分享：https://vote.playferment.com/'}};
 
 document.querySelectorAll('.close').forEach(b=>b.onclick=()=>b.closest('dialog').close());
+// Dismiss ordinary dialogs only when the press and release are on the backdrop.
+document.querySelectorAll('dialog:not(#answerOverlay)').forEach(dialog=>{
+ let backdropPress=false;
+ const outside=event=>{const r=dialog.getBoundingClientRect();return event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom};
+ dialog.addEventListener('pointerdown',event=>{backdropPress=event.target===dialog&&outside(event)});
+ dialog.addEventListener('pointerup',event=>{if(backdropPress&&event.target===dialog&&outside(event))dialog.close();backdropPress=false});
+ dialog.addEventListener('pointercancel',()=>{backdropPress=false});
+});
+
 
 if($('help'))$('help').onclick=()=>$('helpDialog').showModal();
 if($('start'))$('start').onclick=()=>$('helpDialog').close();
