@@ -312,7 +312,7 @@ $('submit').onclick=requestResults;
 
 $('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;persist();player=120;target=null;active=-1;update();$('resultDialog').close()};
 
-$('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ ${location.href}`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製挑戰結果'}catch{$('share').textContent='請複製網址分享：'+location.href}};
+$('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ https://vote.playferment.com/`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製分享結果'}catch{$('share').textContent='請複製網址分享：https://vote.playferment.com/'}};
 
 document.querySelectorAll('.close').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 
