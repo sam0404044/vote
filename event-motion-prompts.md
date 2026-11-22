@@ -18,3 +18,16 @@
 使用內建 image_gen。
 - assets/events/16.webp、17.webp（同步 dist）：參照原選票插圖，暖棕與米白、像素邊緣與細緻紙張紋理；近拍手持紅色圈選工具補蓋選票，以及雙手摺起選票、旁有票匭。由生成的雙欄圖切分。
 - assets/street-bin.webp（同步 dist）：透明背景、臺灣街區像素風格的灰綠金屬垃圾桶，桶口伸出一根分節甘蔗，無文字、標記或人物。
+
+
+## 2026-11-23 A–G 街景彩蛋
+使用內建 image_gen，各物件單獨生成透明背景素材，最終檔案為 assets/props/{milk,peas,pizza,phone,detective,scroll,carrot}.webp，同步 dist/assets/props。
+共用提示：Production environmental object sprite for a detailed Taiwan pixel-art street exploration game. Warm earthy palette, forest green accents, precise stepped pixel edges and pixel clusters, subtle dithering, worn material texture, nostalgic 16-bit scene art. Three-quarter front view, complete object centered with transparent margin. No scenery, ground plane, humans, political faces, UI indicators or captions. Genuine transparent alpha. Display about 60–85 pixels.
+- milk：鮮奶紙盒與便條，無可讀文字。
+- peas：矮木凳上的便當盒，只剩玉米、豌豆、胡蘿蔔丁。
+- pizza：矮木凳上的夏威夷披薩與紅蓋辣椒醬。
+- phone：矮木凳上顯示等待好友邀請的手機，無可讀文字。
+- detective：排水溝格柵上的放大鏡與小腳印。
+- scroll：矮木凳上展開的忍者卷軸、橘色繫帶與抽象漩渦符號。
+- carrot：陶盆中的橘色胡蘿蔔玩偶、綠色葉子與縫線眼睛。
+彩蛋對話為遊戲創作，依使用者要求不顯示靈感來源連結。

@@ -157,6 +157,28 @@ Promise.all([...backgrounds,...avatarFrames.flat()].map(im=>im.decode())).then((
 
 for(let n=0;n<2;n++)$('cast'+n).onclick=()=>{character=n;for(let j=0;j<2;j++){$('cast'+j).classList.toggle('selected',j===n);$('cast'+j).setAttribute('aria-pressed',String(j===n))}};
 
+const streetDiscoveries=[
+ {id:'milk',title:'一盒鮮奶',x:1110,size:72,text:'一盒鮮奶。旁邊的便條寫著：今天已經聽到第三次了。'},
+ {id:'peas',title:'三色豆便當',x:1740,size:82,text:'其他菜都吃完了，只有三色豆還在等待它的支持者。'},
+ {id:'pizza',title:'披薩與辣椒醬',x:2370,size:86,text:'成功避開了三色豆，卻沒有避開東泉辣椒醬。'},
+ {id:'phone',title:'等待加好友的手機',x:2940,size:76,text:'好友邀請還停在這裡。看來下次聊天得先透過共同朋友。'},
+ {id:'detective',title:'偵探放大鏡',x:3570,size:82,text:'放大鏡旁有一張工作單：先找出老鼠從哪裡來。'},
+ {id:'scroll',title:'忍者卷軸',x:4230,size:82,text:'卷軸上寫著：這就是我的忍道。背面寫著：我剛剛有講這句嗎？'},
+ {id:'carrot',title:'胡蘿蔔玩偶',x:4920,size:76,text:'它堅持自己是橘色的，卻一直被叫成紅蘿蔔。'}
+];
+streetDiscoveries.forEach(prop=>{
+ const button=document.createElement('button');button.className='street-prop';button.setAttribute('aria-label','查看'+prop.title);
+ button.style.width=button.style.height=prop.size+'px';
+ const image=new Image();image.src=`assets/props/${prop.id}.webp`;image.alt='';image.loading='lazy';image.decoding='async';button.append(image);
+ button.onclick=()=>{
+  if(dialogOpen())return;keys={};target=null;
+  $('discoveryImage').src=image.src;$('discoveryImage').alt=prop.title;
+  $('discoveryTitle').textContent=prop.title;$('discoveryText').textContent=prop.text;
+  $('streetDiscovery').showModal();
+ };
+ $('viewport').append(button);prop.button=button;
+});
+
 function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=false;ctx.save();ctx.scale(1,height/360);
 
  if(artReady){
@@ -165,6 +187,9 @@ function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=fals
 
    if(moving){if(keys.arrowleft||keys.a)facing=-1;else if(keys.arrowright||keys.d)facing=1;else if(target)facing=Math.sign(target.x-player)||facing}
 
+   // A soft ground shadow stays circular in screen space as the map resizes.
+   ctx.save();ctx.translate(player-camera,336);ctx.scale(1,360/height);ctx.translate(0,-4);ctx.scale(1,.22);
+   const footShadow=ctx.createRadialGradient(0,0,3,0,0,33);footShadow.addColorStop(0,'rgba(16,35,29,.38)');footShadow.addColorStop(.55,'rgba(16,35,29,.2)');footShadow.addColorStop(1,'rgba(16,35,29,0)');ctx.fillStyle=footShadow;ctx.fillRect(-33,-33,66,66);ctx.restore();
    // The map stretches vertically with the viewport; keep the avatar square.
    ctx.save();ctx.translate(player-camera,336);ctx.scale(facing,360/height);ctx.drawImage(avatarFrames[character][walkFrame],-70,-140,140,140);ctx.restore();
 
@@ -174,8 +199,9 @@ function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=fals
 
  questions.forEach((q,i)=>{let el=$('point'+i);el.style.left=(q.x-camera)+'px';el.hidden=q.x-camera< -100||q.x-camera>width+100});
 
- $('streetBin').style.left=(620-camera)+'px';
- $('streetBin').style.top=(height*336/360-76)+'px';
+ streetDiscoveries.forEach(prop=>{const x=prop.x-camera;prop.button.style.left=x+'px';prop.button.style.top=(height*320/360-prop.size)+'px';prop.button.hidden=x< -100||x>width+100});
+ $('streetBin').style.left=(690-camera)+'px';
+ $('streetBin').style.top=(height*320/360-76)+'px';
  const nearest=questions.reduce((a,b)=>Math.abs(b.x-player)<Math.abs(a.x-player)?b:a);
 
  $('zone').textContent=nearest.zone;
