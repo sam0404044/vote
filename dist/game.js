@@ -77,7 +77,7 @@ $('helpDialog').querySelectorAll('p')[1].innerHTML='每題選 <b>○ 可以做�
 
 
 
-const canvas=$('scene'),ctx=canvas.getContext('2d');let width=1000,height=360;
+const canvas=$('scene'),ctx=canvas.getContext('2d'),playerCanvas=$('playerScene'),playerCtx=playerCanvas.getContext('2d');let width=1000,height=360;
 
 
 
@@ -158,13 +158,10 @@ Promise.all([...backgrounds,...avatarFrames.flat()].map(im=>im.decode())).then((
 for(let n=0;n<2;n++)$('cast'+n).onclick=()=>{character=n;for(let j=0;j<2;j++){$('cast'+j).classList.toggle('selected',j===n);$('cast'+j).setAttribute('aria-pressed',String(j===n))}};
 
 const streetDiscoveries=[
- {id:'milk',title:'一盒鮮奶',x:1110,size:72,text:'一盒鮮奶。旁邊的便條寫著：今天已經聽到第三次了。'},
+ {id:'milk',title:'一盒鮮奶',x:1110,size:72,text:'一盒鮮奶。旁邊的便條寫著：生生喝鮮奶'},
  {id:'peas',title:'三色豆便當',x:1740,size:82,text:'其他菜都吃完了，只有三色豆還在等待它的支持者。'},
- {id:'pizza',title:'披薩與辣椒醬',x:2370,size:86,text:'成功避開了三色豆，卻沒有避開東泉辣椒醬。'},
- {id:'phone',title:'等待加好友的手機',x:2940,size:76,text:'好友邀請還停在這裡。看來下次聊天得先透過共同朋友。'},
  {id:'detective',title:'偵探放大鏡',x:3570,size:82,text:'放大鏡旁有一張工作單：先找出老鼠從哪裡來。'},
  {id:'scroll',title:'忍者卷軸',x:4230,size:82,text:'卷軸上寫著：這就是我的忍道。背面寫著：我剛剛有講這句嗎？'},
- {id:'carrot',title:'胡蘿蔔玩偶',x:4920,size:76,text:'它堅持自己是橘色的，卻一直被叫成紅蘿蔔。'}
 ];
 streetDiscoveries.forEach(prop=>{
  const button=document.createElement('button');button.className='street-prop';button.setAttribute('aria-label','查看'+prop.title);
@@ -179,7 +176,7 @@ streetDiscoveries.forEach(prop=>{
  $('viewport').append(button);prop.button=button;
 });
 
-function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=false;ctx.save();ctx.scale(1,height/360);
+function render(){playerCtx.clearRect(0,0,width,height);playerCtx.imageSmoothingEnabled=false;ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=false;ctx.save();ctx.scale(1,height/360);
 
  if(artReady){
 
@@ -187,11 +184,13 @@ function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=fals
 
    if(moving){if(keys.arrowleft||keys.a)facing=-1;else if(keys.arrowright||keys.d)facing=1;else if(target)facing=Math.sign(target.x-player)||facing}
 
+   playerCtx.save();playerCtx.scale(1,height/360);
    // A soft ground shadow stays circular in screen space as the map resizes.
-   ctx.save();ctx.translate(player-camera,336);ctx.scale(1,360/height);ctx.translate(0,-4);ctx.scale(1,.22);
-   const footShadow=ctx.createRadialGradient(0,0,3,0,0,33);footShadow.addColorStop(0,'rgba(16,35,29,.38)');footShadow.addColorStop(.55,'rgba(16,35,29,.2)');footShadow.addColorStop(1,'rgba(16,35,29,0)');ctx.fillStyle=footShadow;ctx.fillRect(-33,-33,66,66);ctx.restore();
+   playerCtx.save();playerCtx.translate(player-camera,336);playerCtx.scale(1,360/height);playerCtx.translate(0,-4);playerCtx.scale(1,.22);
+   const footShadow=playerCtx.createRadialGradient(0,0,3,0,0,33);footShadow.addColorStop(0,'rgba(16,35,29,.38)');footShadow.addColorStop(.55,'rgba(16,35,29,.2)');footShadow.addColorStop(1,'rgba(16,35,29,0)');playerCtx.fillStyle=footShadow;playerCtx.fillRect(-33,-33,66,66);playerCtx.restore();
    // The map stretches vertically with the viewport; keep the avatar square.
-   ctx.save();ctx.translate(player-camera,336);ctx.scale(facing,360/height);ctx.drawImage(avatarFrames[character][walkFrame],-70,-140,140,140);ctx.restore();
+   playerCtx.save();playerCtx.translate(player-camera,336);playerCtx.scale(facing,360/height);playerCtx.drawImage(avatarFrames[character][walkFrame],-70,-140,140,140);playerCtx.restore();
+   playerCtx.restore();
 
  }else{ctx.fillStyle='#193e38';ctx.fillRect(0,0,width,360);ctx.fillStyle='#f1e8ba';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText('像素街區載入中…',width/2,180)}
 
@@ -290,9 +289,9 @@ function showAnswerEffect(correct,index){
 
  const overlay=$('answerOverlay');overlay.dataset.correct=String(correct);overlay.setAttribute('aria-label',correct?'答對了':'答錯了');
 
- const mark=correct?'<path class="brush-stroke" pathLength="1" d="M 304 82 C 421 75 518 166 521 284 C 531 405 432 517 309 521 C 188 528 81 441 78 312 C 70 190 172 84 296 81"/>':'<path class="brush-stroke" pathLength="1" d="M 135 132 Q 282 290 465 467"/><path class="brush-stroke second" pathLength="1" d="M 464 137 Q 298 302 135 465"/>';
+ const mark=correct?'<circle class="answer-stroke" pathLength="1" cx="300" cy="300" r="220"/>':'<path class="answer-stroke" pathLength="1" d="M 140 140 L 460 460"/><path class="answer-stroke second" pathLength="1" d="M 460 140 L 140 460"/>';
 
- $('answerMark').innerHTML=`<svg viewBox="0 0 600 600" aria-hidden="true"><defs><filter id="brushTexture"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="7" result="grain"/><feDisplacementMap in="SourceGraphic" in2="grain" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter></defs><g filter="url(#brushTexture)">${mark}</g></svg>`;
+ $('answerMark').innerHTML=`<svg viewBox="0 0 600 600" aria-hidden="true">${mark}</svg>`;
 
  $('answerVerdict').textContent=correct?'答對了！':'答錯了';
 
@@ -380,13 +379,21 @@ window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEv
 
 [['left','arrowleft'],['right','arrowright']].forEach(([id,key])=>{const button=$(id);button.onpointerdown=e=>{if(e.button!==0||dialogOpen())return;e.preventDefault();button.setPointerCapture(e.pointerId);target=null;keys[key]=true};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>keys[key]=false});
 
+// Suppress native long-press handling without interrupting continuous walking.
+[['left','arrowleft'],['right','arrowright']].forEach(([id,key])=>{
+ const button=$(id);
+ button.addEventListener('touchstart',event=>{event.preventDefault();if(dialogOpen())return;target=null;keys[key]=true},{passive:false});
+ button.addEventListener('touchend',event=>{event.preventDefault();keys[key]=false},{passive:false});
+ button.addEventListener('touchcancel',()=>{keys[key]=false});
+});
+
 let gesture=null;
 $('viewport').addEventListener('pointerdown',e=>{if(e.button!==0||e.target.closest('button')||dialogOpen())return;gesture={x:e.clientX,player,dragged:false,touch:e.pointerType==='touch'};$('viewport').setPointerCapture(e.pointerId)});
 $('viewport').addEventListener('pointermove',e=>{if(!gesture||!gesture.touch)return;const dx=e.clientX-gesture.x;if(Math.abs(dx)>8){gesture.dragged=true;target={x:Math.max(50,Math.min(WORLD-60,gesture.player-dx*2)),index:null}}});
 $('viewport').addEventListener('pointerup',e=>{if(!gesture)return;if(!gesture.dragged){const rect=$('viewport').getBoundingClientRect();const worldX=camera+e.clientX-rect.left;const hit=questions.findIndex(q=>worldX>=q.x-25&&worldX<=q.x+160);target={x:hit<0?Math.max(50,Math.min(WORLD-60,worldX)):questions[hit].x,index:hit<0?null:hit}}gesture=null});
 $('viewport').addEventListener('pointercancel',()=>gesture=null);
 
-function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);width=$('viewport').clientWidth;height=$('viewport').clientHeight;canvas.width=width*dpr;canvas.height=height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);width=$('viewport').clientWidth;height=$('viewport').clientHeight;canvas.width=width*dpr;canvas.height=height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);playerCanvas.width=width*dpr;playerCanvas.height=height*dpr;playerCtx.setTransform(dpr,0,0,dpr,0,0)}
 
 window.addEventListener('resize',resize);new ResizeObserver(resize).observe($('viewport'));resize();
 
@@ -422,4 +429,4 @@ update();requestAnimationFrame(tick);
 
 
 // Long-pressing the map or movement buttons must not open the browser menu.
-[$('viewport'),document.querySelector('.walk')].forEach(surface=>surface.addEventListener('contextmenu',event=>{event.preventDefault();keys={};gesture=null}));
+[$('viewport'),document.querySelector('.walk')].forEach(surface=>surface.addEventListener('contextmenu',event=>{event.preventDefault()}));
