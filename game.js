@@ -164,7 +164,8 @@ function render(){ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=fals
 
    if(moving){if(keys.arrowleft||keys.a)facing=-1;else if(keys.arrowright||keys.d)facing=1;else if(target)facing=Math.sign(target.x-player)||facing}
 
-   ctx.save();ctx.translate(player-camera,318);ctx.scale(facing,1);ctx.drawImage(avatarFrames[character][walkFrame],-70,-122,140,140);ctx.restore();
+   // The map stretches vertically with the viewport; keep the avatar square.
+   ctx.save();ctx.translate(player-camera,336);ctx.scale(facing,360/height);ctx.drawImage(avatarFrames[character][walkFrame],-70,-140,140,140);ctx.restore();
 
  }else{ctx.fillStyle='#193e38';ctx.fillRect(0,0,width,360);ctx.fillStyle='#f1e8ba';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText('像素街區載入中…',width/2,180)}
 
