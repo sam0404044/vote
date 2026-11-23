@@ -1,5 +1,24 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>這票算不算？｜遊戲發酵室</title><link rel="stylesheet" href="style.css"></head>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>這票算不算？｜遊戲發酵室</title><meta name="description" content="選票蓋在照片上有效嗎？投票日穿 PUMA 算助選嗎？走進像素街區，挑戰 18 個投票迷思，答完立即看解答，還有街角彩蛋等你發現！">
+<link rel="canonical" href="https://vote.playferment.com/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:site_name" content="遊戲發酵室">
+<meta property="og:title" content="這票算不算？｜18 個投票迷思，邊走邊破解">
+<meta property="og:description" content="選票蓋在照片上有效嗎？投票日穿 PUMA 算助選嗎？走進像素街區，挑戰 18 個投票迷思，答完立即看解答，還有街角彩蛋等你發現！">
+<meta property="og:url" content="https://vote.playferment.com/">
+<meta property="og:image" content="https://vote.playferment.com/assets/share-preview.png">
+<meta property="og:image:secure_url" content="https://vote.playferment.com/assets/share-preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1561">
+<meta property="og:image:height" content="1102">
+<meta property="og:image:alt" content="這票算不算的像素街區遊戲畫面，包含角色、投票事件與街角彩蛋">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="這票算不算？｜18 個投票迷思，邊走邊破解">
+<meta name="twitter:description" content="選票蓋在照片上有效嗎？投票日穿 PUMA 算助選嗎？走進像素街區，挑戰 18 個投票迷思，答完立即看解答，還有街角彩蛋等你發現！">
+<meta name="twitter:image" content="https://vote.playferment.com/assets/share-preview.png">
+<meta name="twitter:image:alt" content="這票算不算的像素街區遊戲畫面">
+<link rel="stylesheet" href="style.css"></head>
 <body>
 <main>
 <section data-phase="title" class="game" aria-label="可左右走動的投票日地圖"><div id="gameLoading" role="status" aria-live="polite">遊戲載入中…</div><div id="introStage" class="game-stage"><div id="titleStage"><h1><span class="title-light">這票</span><span class="title-dark">算不算？</span></h1><button id="beginGame">遊戲開始</button></div><div id="characterStage" hidden><h2>選擇角色</h2><div class="character-options"><button id="cast0" class="cast selected" aria-pressed="true"><img src="assets/avatars/shen-idle.webp" alt=""><span>沈ㄅ洋</span></button><button id="cast1" class="cast" aria-pressed="false"><img src="assets/avatars/chiang-idle.webp" alt=""><span>蔣ㄨ安</span></button></div><p>選擇你喜歡的角色</p><button id="enterGame" disabled>圖片載入中…</button></div></div><div id="playStage"><div class="game-top"><span><i class="live"></i> 民主街區 · 投票日早晨</span><span id="zone">街口廣場</span></div><div id="viewport"><canvas id="scene" aria-label="2D 街區場景"></canvas><canvas id="playerScene" aria-hidden="true"></canvas><div id="hotspots"></div><button id="streetBin" aria-label="查看垃圾桶"><img src="assets/street-bin.webp" alt=""></button></div><div class="minimap" id="minimap" aria-label="事件位置導覽"></div><div class="controls"><div class="walk"><button id="left" aria-label="向左走">◀</button><button id="right" aria-label="向右走">▶</button></div></div></div></section>
