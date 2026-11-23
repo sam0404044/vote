@@ -346,10 +346,11 @@ function showResults(){
 }
 
 $('endResults').onclick=()=>{$('endDialog').close();requestResults()};
+$('scoreShortcut').onclick=()=>{if(dialogOpen())return;keys={};target=null;requestResults()};
 $('streetBin').onclick=()=>{if(dialogOpen())return;keys={};target=null;$('streetBinDialog').showModal()};
 let endPromptShown=false;
 
-$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;endPromptShown=false;player=120;target=null;active=-1;update();$('resultDialog').close();setPhase('title')};
+$('restart').onclick=()=>{answers=Array(TOTAL).fill(null);finished=false;endPromptShown=false;$('scoreShortcut').hidden=true;player=120;target=null;active=-1;update();$('resultDialog').close();setPhase('title')};
 
 $('share').onclick=async()=>{const value=`這票算不算？我答對 ${correctCount()}/${TOTAL} 題！你能破解幾個投票迷思？ https://vote.playferment.com/`;try{await navigator.clipboard.writeText(value);$('share').textContent='已複製分享結果'}catch{$('share').textContent='請複製網址分享：https://vote.playferment.com/'}};
 
@@ -417,6 +418,7 @@ function tick(now){
 
  camera=Math.max(0,Math.min(Math.max(0,WORLD-width),player-width*.38));render();
  const atEnd=Math.abs(player-questions[TOTAL-1].x)<110;
+ if(atEnd&&phase==='play')$('scoreShortcut').hidden=false;
  if(!atEnd)endPromptShown=false;
  if(atEnd&&!endPromptShown&&!dialogOpen()&&!target){endPromptShown=true;keys={};$('endDialog').showModal()}
 
