@@ -74,3 +74,5 @@ dialog button.primary,.controls button.primary{background:#206b51;color:#fff;bor
 #playerScene{position:absolute;inset:0;z-index:3;width:100%;height:100%;pointer-events:none;image-rendering:pixelated}#hotspots{z-index:4}
 
 .controls:has(#scoreShortcut:not([hidden])){gap:12px}.controls:has(#scoreShortcut:not([hidden])) .walk{flex:1;max-width:420px;min-width:0}#scoreShortcut{flex:0 0 auto;min-height:56px;white-space:nowrap}@media(max-width:760px){.controls:has(#scoreShortcut:not([hidden])){gap:8px}.controls:has(#scoreShortcut:not([hidden])) .walk{width:auto;gap:8px}#scoreShortcut{min-height:50px;padding:6px 10px;font-size:12px}}
+
+#resultDialog #answers{margin-top:24px}
